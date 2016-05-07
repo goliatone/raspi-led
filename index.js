@@ -27,19 +27,26 @@ import { Peripheral } from 'raspi-peripheral';
 
 export const OFF = 0;
 export const ON = 1;
+let ledAvailable = true;
 
 export class LED extends Peripheral {
 
   constructor() {
     super([]);
-    fs.writeFileSync('/sys/class/leds/led0/trigger', 'none');
+    try {
+      fs.writeFileSync('/sys/class/leds/led0/trigger', 'none');
+    } catch(e){
+      ledAvailable = false;
+    }
   }
 
   read() {
+    if(!ledAvailable) return ON;
     return parseInt(fs.readFileSync('/sys/class/leds/led0/brightness').toString(), 10) ? ON : OFF;
   }
 
   write(value) {
+    if(!ledAvailable) return;
     this.validateAlive();
     if ([ ON, OFF ].indexOf(value) == -1) {
       throw new Error('Invalid LED value ' + value);
